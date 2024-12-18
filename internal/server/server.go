@@ -1,6 +1,7 @@
 package server
 
 import (
+    "github.com/rdawson46/pic-conversion/internal/conversion"
 	"context"
 	"fmt"
 	"image"
@@ -11,21 +12,30 @@ import (
 	"golang.org/x/time/rate"
 )
 
+type ServerType int
+
+const (
+    Test ServerType = iota
+    Prod
+)
+
 type ServerConfig struct {
     Port int
     MaxUploadSize int64
     RateLimitReq float64
     RateLimitBurst int
     ShutdownTimeout time.Duration
+    sType ServerType
 }
 
-func NewConfig(port int, maxUpload int64, rateLimitReq float64, rateLimitBurst int, shutdown time.Duration) ServerConfig {
+func NewConfig(port int, maxUpload int64, rateLimitReq float64, rateLimitBurst int, shutdown time.Duration, sType ServerType) ServerConfig {
     return ServerConfig{
         Port: port,
         MaxUploadSize: maxUpload << 20,
         RateLimitReq: rateLimitReq,
         RateLimitBurst: rateLimitBurst,
         ShutdownTimeout: shutdown,
+        sType: sType,
     }
 }
 
@@ -38,6 +48,8 @@ type Server struct {
 
 func NewServer(config ServerConfig) *Server {
     logger, _ := zap.NewProduction()
+
+    // TODO: connect to db by checking config
 
     return &Server{
         config: config, 
@@ -80,14 +92,15 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
 
     defer file.Close()
 
-    _, _, err = image.Decode(file)
+    // TODO: fix this
+    img, _, err := image.Decode(file)
     if err != nil {
         http.Error(w, "Invalid image format", http.StatusBadRequest)
         return
     }
 
-    // TODO: convert to Ansi art
-    ansiArt := "Hello"
+    // HACK: hard coding 100 temp
+    ansiArt := conversion.ConvertImage(img, 100)
 
     w.Header().Set("Content-Type", "text/plain")
     fmt.Fprint(w, ansiArt)
@@ -97,9 +110,9 @@ func (s *Server) Start() error {
     mux := http.NewServeMux()
 
 
-    // TODO: need to set up routing format
-
+    // TODO: need to set up routing for UI at /
     // mux.HandleFunc("/", s.index())
+
     mux.HandleFunc("/upload", s.rateLimitMiddleware(s.uploadHandler))
 
     s.httpServer = &http.Server{

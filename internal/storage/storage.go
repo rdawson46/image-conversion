@@ -4,7 +4,7 @@ package storage
 
 NEEDS:
 caching
-TTL
+    TTL
 hashing images
 
 */
@@ -16,26 +16,13 @@ import (
     "io"
 )
 
+// TODO: add a client to the server
+type Client interface {
+    GetImage(img image.Image, width int) (string, error)
+}
 
-func calculateImageHash(img image.Image) string {
+func CalculateImageHash(img image.Image) string {
     hash := sha256.New()
     io.WriteString(hash, img.Bounds().String())
     return hex.EncodeToString(hash.Sum(nil))
-}
-
-// TODO: will need a db connection
-func ProcessImage(img image.Image) string {
-    imageHash := calculateImageHash(img)
-
-    // check for calculated art with hash
-
-    // if so return 
-
-    // else caclulate
-
-    // store
-
-    // then return
-
-    return ""
 }

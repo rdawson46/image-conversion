@@ -9,9 +9,8 @@ import (
 	"github.com/rdawson46/pic-conversion/internal/server"
 )
 
-
 func run() error {
-    config := server.NewConfig(8000, 10, 10, 30, 10)
+    config := server.NewConfig(8000, 10, 10, 30, 10, server.Test)
 
     s := server.NewServer(config)
 
