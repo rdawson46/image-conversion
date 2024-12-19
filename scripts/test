@@ -1,0 +1,17 @@
+#!/bin/sh
+
+URL="http://localhost:8000/upload"
+FILE_PATH="$(realpath ../internal/conversion/sample.png)"
+
+
+if [[ ! -f $FILE_PATH ]]; then
+    echo "Error: file not found at $FILE_PATH"
+    exit 1
+fi
+
+OPTIONS="-X POST -F image=@$FILE_PATH"
+
+response=$(curl $OPTIONS $URL)
+
+echo "Response from server"
+echo "$response"
