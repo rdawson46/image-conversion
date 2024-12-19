@@ -16,20 +16,22 @@ func NewSampleDB() *SampleDB {
 }
 
 // error handling not really needed for sample
-func (s *SampleDB) GetImage(img image.Image, width int) (string, error) {
+func (s *SampleDB) GetImage(img image.Image, width int) (string, bool, error) {
     // create hash
     hash := calculateImageHash(img)
 
     // check in db
-    if value, ok := s.db[hash]; ok {
-        return value, nil
+    value, ok := s.db[hash]
+
+    if ok {
+        return value, ok, nil
     }
 
     // else create everything
-    ansi := conversion.ConvertImage(img, width)
+    ansi := conversion.ConvertColorImage(img, width)
 
     // and store
     s.db[hash] = ansi
 
-    return ansi, nil
+    return ansi, ok, nil
 }

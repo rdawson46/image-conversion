@@ -1,16 +1,27 @@
 #!/bin/sh
 
 URL="http://localhost:8000/upload"
-FILE_PATH="$(realpath ../internal/conversion/sample.png)"
+SAM_PATH="$(realpath ../internal/conversion/images/sample.png)"
+MCLAREN_PATH="$(realpath ../internal/conversion/images/mclaren.png)"
 
 
-if [[ ! -f $FILE_PATH ]]; then
-    echo "Error: file not found at $FILE_PATH"
+if [[ ! -f $SAM_PATH ]]; then
+    echo "Error: file not found at $SAME_PATH"
     exit 1
 fi
 
-OPTIONS="-X POST -F image=@$FILE_PATH"
+if [[ ! -f $MCLAREN_PATH ]]; then
+    echo "Error: file not found at $MCLAREN_PATH"
+    exit 1
+fi
 
+OPTIONS="-X POST -F image=@$SAM_PATH"
+response=$(curl $OPTIONS $URL)
+
+echo "Response from server"
+echo "$response"
+
+OPTIONS="-X POST -F image=@$MCLAREN_PATH"
 response=$(curl $OPTIONS $URL)
 
 echo "Response from server"

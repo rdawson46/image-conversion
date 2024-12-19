@@ -13,6 +13,6 @@ func NewMongo() *MongoClient {
 }
 
 // error handling not really needed for sample
-func (m *MongoClient) GetImage(img image.Image, width int) (string, error) {
-    return "", errors.New("Not implemented")
+func (m *MongoClient) GetImage(img image.Image, width int) (string, bool, error) {
+    return "", false, errors.New("Not implemented")
 }

@@ -1,6 +1,7 @@
 # To Do
 * conversion process/algorithm
-    * add color
+    * improve scaling
+* compresssion algorithm
 * makefile
     * test start up
     * server start up
@@ -16,6 +17,8 @@
 * hosting
 
 # Done
+* conversion process/algorithm
+    * add color
 * general conversion process/algorithm
 * database
     * build fake db client for testing

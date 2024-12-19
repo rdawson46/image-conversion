@@ -1,13 +1,30 @@
 package conversion
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
 	"math"
-    "strings"
+	"strings"
 )
+
+type AnsiColor struct {
+    code int
+    r, g, b uint8
+}
+
+var ansiColors = []AnsiColor{
+    {30, 0, 0, 0}, // black
+    {31, 170, 0, 0}, // red
+    {32, 0, 170, 0}, // green
+    {33, 170, 85, 0}, // yellow
+    {34, 0, 0, 170}, // blue
+    {34, 170, 0, 170}, // magenta
+    {35, 0, 170, 170}, // cyan
+    {37, 170, 170, 170}, // white
+}
 
 var asciiChars = []rune{
     ' ',
@@ -35,17 +52,18 @@ func MapToAscii(grayValue float64) rune {
 
 func ResizeImage(img image.Image, width int) image.Image {
     bounds := img.Bounds()
-    ratio := float64(bounds.Dy()) / float64(bounds.Dx())
+    dy := bounds.Dy()
+    dx := bounds.Dx()
 
+    ratio := float64(dy) / float64(dx)
     height := int(float64(width) * ratio)
-
     resized := image.NewRGBA(image.Rect(0, 0, width, height))
 
     for y := 0; y < height; y++ {
-        origY := y * bounds.Dy() / height
+        origY := y * dy / height
 
-        for x := 0; x < height; x++ {
-            origX := x * bounds.Dx() / width
+        for x := 0; x < width; x++ {
+            origX := x * dx / width
 
             c := img.At(origX, origY)
 
@@ -56,7 +74,7 @@ func ResizeImage(img image.Image, width int) image.Image {
     return resized
 }
 
-func ConvertImage(img image.Image, width int) string {
+func oldConvertImage(img image.Image, width int) string {
     var ans string
 
     resizedImage := ResizeImage(img, width)
@@ -82,3 +100,70 @@ func ConvertImage(img image.Image, width int) string {
     return ans
 }
 
+// functions for color
+
+func colorDistance(r1, g1, b1, r2, g2, b2 uint8) float64 {
+    rDiff := float64(r1) - float64(r2)
+    gDiff := float64(g1) - float64(g2)
+    bDiff := float64(b1) - float64(b2)
+
+    return math.Sqrt(rDiff*rDiff + gDiff*gDiff + bDiff*bDiff)
+}
+
+func closestAnsiColor(r, g, b uint8) AnsiColor {
+    var closestColor AnsiColor
+    minDist := math.MaxFloat64
+
+    for _, ac := range ansiColors {
+        dist := colorDistance(r, g, b, ac.r, ac.g, ac.b)
+
+        if dist < minDist {
+            minDist = dist
+            closestColor = ac
+        }
+    }
+    return closestColor
+}
+
+
+func ConvertColorImage(img image.Image, width int) string {
+    var ans string
+
+    resizedImage := ResizeImage(img, width)
+    bounds := resizedImage.Bounds()
+    height := bounds.Max.Y
+    width = bounds.Max.X
+
+    for y := 0; y < height; y++ {
+        l := ""
+
+        for x := 0; x < width; x++ {
+            pixelColor := resizedImage.At(x, y)
+            r, g, b, _ := pixelColor.RGBA()
+
+            r8 := uint8(r >> 8)
+            g8 := uint8(g >> 8)
+            b8 := uint8(b >> 8)
+
+            ansiColor := closestAnsiColor(r8, g8, b8)
+
+            grayValue := ColorToGrayscale(pixelColor)
+            asciiChar := MapToAscii(grayValue)
+
+            var asciiArt string
+            if asciiChar != ' '{
+                asciiArt = fmt.Sprintf("\033[%dm%c", ansiColor.code, asciiChar)
+            } else {
+                asciiArt = string(asciiChar)
+            }
+
+            l += string(asciiArt)
+       }
+
+        if len(strings.TrimSpace(l)) != 0 {
+            ans += l + "\033[0m\n"
+        }
+    }
+
+    return ans
+}

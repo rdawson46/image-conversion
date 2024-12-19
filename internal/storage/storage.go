@@ -17,7 +17,7 @@ import (
 )
 
 type Client interface {
-    GetImage(img image.Image, width int) (string, error)
+    GetImage(img image.Image, width int) (string, bool, error)
 }
 
 func calculateImageHash(img image.Image) string {

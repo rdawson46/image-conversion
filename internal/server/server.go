@@ -115,12 +115,14 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // HACK: hard coding 100 temp
-    ansiArt, err := s.db.GetImage(img, 100)
+    ansiArt, cached, err := s.db.GetImage(img, 150)
 
     if err != nil {
         http.Error(w, "Error converting image to ansi", http.StatusInternalServerError)
         return
     }
+
+    s.logger.Info("Image made:", zap.Int("len", len(ansiArt)), zap.Bool("Cached", cached))
 
     w.Header().Set("Content-Type", "text/plain")
     fmt.Fprint(w, ansiArt)

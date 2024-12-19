@@ -25,7 +25,7 @@ func TestConvertImage(t *testing.T) {
         t.Error(err)
     }
 
-    ansi := conversion.ConvertImage(img, 100)
+    ansi := conversion.ConvertColorImage(img, 100)
 
     fmt.Println(ansi)
 }
