@@ -9,7 +9,7 @@ type SampleDB struct {
     db map[string]string
 }
 
-func newSampleDB() *SampleDB {
+func NewSampleDB() *SampleDB {
     return &SampleDB{
         db: make(map[string]string),
     }

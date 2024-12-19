@@ -1,10 +1,21 @@
 # To Do
 * conversion process/algorithm
+    * add color
+* makefile
+    * test start up
+    * server start up
+* assign addr
+    * modify test script
 * database
-    * build fake cache for testing
-    * figure out SQL vs Document
-        * leaning toward mongo
-    * TTL caching with hash
+    * mongo setup
+        * TTL caching with hash
     * connection for server
-* UI and routing
+* UI
+* routing
+    * error handling and logging
 * hosting
+
+# Done
+* general conversion process/algorithm
+* database
+    * build fake db client for testing

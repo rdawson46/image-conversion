@@ -1,11 +1,12 @@
 package conversion
 
 import (
-    "image"
-    "image/color"
-    _ "image/jpeg"
-    _ "image/png"
-    "math"
+	"image"
+	"image/color"
+	_ "image/jpeg"
+	_ "image/png"
+	"math"
+    "strings"
 )
 
 var asciiChars = []rune{
@@ -22,18 +23,17 @@ var asciiChars = []rune{
     '@',
 }
 
-func colorToGrayscale(c color.Color) float64 {
+func ColorToGrayscale(c color.Color) float64 {
     r, g, b, _ := c.RGBA()
-
     return (0.299 * float64(r) + 0.587 * float64(g) + 0.114 * float64(b)) / 65535.0
 }
 
-func mapToAscii(grayValue float64) rune {
+func MapToAscii(grayValue float64) rune {
     i := int(math.Floor(grayValue * float64(len(asciiChars)-1)))
     return asciiChars[i]
 }
 
-func resizeImage(img image.Image, width int) image.Image {
+func ResizeImage(img image.Image, width int) image.Image {
     bounds := img.Bounds()
     ratio := float64(bounds.Dy()) / float64(bounds.Dx())
 
@@ -59,22 +59,26 @@ func resizeImage(img image.Image, width int) image.Image {
 func ConvertImage(img image.Image, width int) string {
     var ans string
 
-    resizedImage := resizeImage(img, width)
-
+    resizedImage := ResizeImage(img, width)
     bounds := resizedImage.Bounds()
     height := bounds.Max.Y
 
     for y := 0; y < height; y++ {
+        l := ""
+
         for x := 0; x < width; x++ {
             pixelColor := resizedImage.At(x, y)
-            grayValue := colorToGrayscale(pixelColor)
-            asciiChar := mapToAscii(grayValue)
+            grayValue := ColorToGrayscale(pixelColor)
+            asciiChar := MapToAscii(grayValue)
 
-            ans += string(asciiChar)
+            l += string(asciiChar)
         }
 
-        ans += "\n"
+        if len(strings.TrimSpace(l)) != 0 {
+            ans += l + "\n"
+        }
     }
 
     return ans
 }
+

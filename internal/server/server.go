@@ -1,12 +1,14 @@
 package server
 
 import (
-    "github.com/rdawson46/pic-conversion/internal/conversion"
 	"context"
 	"fmt"
 	"image"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/rdawson46/pic-conversion/internal/storage"
 
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
@@ -44,12 +46,25 @@ type Server struct {
     httpServer *http.Server
     logger *zap.Logger
     rateLimiter *rate.Limiter
+    db storage.Client
 }
 
 func NewServer(config ServerConfig) *Server {
-    logger, _ := zap.NewProduction()
+    logger, _ := zap.NewDevelopment()
 
-    // TODO: connect to db by checking config
+    var client storage.Client
+
+    // TODO: command line arg 
+    switch config.sType {
+    case Test:
+        client = storage.NewSampleDB()
+    case Prod:
+        // TODO: implement
+        client = storage.NewMongo()
+    default:
+        fmt.Println("Not valid db type")
+        os.Exit(1)
+    }
 
     return &Server{
         config: config, 
@@ -58,6 +73,7 @@ func NewServer(config ServerConfig) *Server {
             rate.Limit(config.RateLimitReq),
             config.RateLimitBurst,
         ),
+        db: client,
     }
 }
 
@@ -92,7 +108,6 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
 
     defer file.Close()
 
-    // TODO: fix this
     img, _, err := image.Decode(file)
     if err != nil {
         http.Error(w, "Invalid image format", http.StatusBadRequest)
@@ -100,7 +115,12 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // HACK: hard coding 100 temp
-    ansiArt := conversion.ConvertImage(img, 100)
+    ansiArt, err := s.db.GetImage(img, 100)
+
+    if err != nil {
+        http.Error(w, "Error converting image to ansi", http.StatusInternalServerError)
+        return
+    }
 
     w.Header().Set("Content-Type", "text/plain")
     fmt.Fprint(w, ansiArt)
@@ -108,7 +128,6 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) Start() error {
     mux := http.NewServeMux()
-
 
     // TODO: need to set up routing for UI at /
     // mux.HandleFunc("/", s.index())
@@ -123,7 +142,7 @@ func (s *Server) Start() error {
     }
 
     go func() {
-        s.logger.Info("Starting Server", zap.Int("port", s.config.Port))
+        s.logger.Info("Starting Server", zap.Int("port", s.config.Port), zap.String("address", s.httpServer.Addr))
 
         if err := s.httpServer.ListenAndServe(); err != http.ErrServerClosed {
             s.logger.Error("Server Failed", zap.Error(err))
