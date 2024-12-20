@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/rdawson46/pic-conversion/internal/conversion"
 	"github.com/rdawson46/pic-conversion/internal/storage"
 
 	"go.uber.org/zap"
@@ -122,10 +123,18 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    s.logger.Info("Image made:", zap.Int("len", len(ansiArt)), zap.Bool("Cached", cached))
+    s.logger.Info("Image made:", zap.Int("len(ansiArt)", len(ansiArt)), zap.Bool("Cached", cached))
 
+    mess, err := conversion.Compress(ansiArt)
     w.Header().Set("Content-Type", "text/plain")
-    fmt.Fprint(w, ansiArt)
+
+    if err != nil {
+        fmt.Fprint(w, ansiArt)
+        return
+    }
+
+    s.logger.Info("Image made:", zap.Int("len(mess)", len(mess)))
+    fmt.Fprint(w, mess)
 }
 
 func (s *Server) Start() error {

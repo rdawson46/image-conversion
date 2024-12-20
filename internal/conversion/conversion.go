@@ -1,6 +1,9 @@
 package conversion
 
 import (
+	"bytes"
+	"compress/gzip"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -166,4 +169,21 @@ func ConvertColorImage(img image.Image, width int) string {
     }
 
     return ans
+}
+
+func Compress(ans string) (string, error) {
+    var b bytes.Buffer
+    gz := gzip.NewWriter(&b)
+
+    _, err := gz.Write([]byte(ans))
+
+    if err != nil {
+        return ans, errors.New("Couldn't compress string")
+    }
+
+    if err := gz.Close(); err != nil {
+        return ans, errors.New("Error closing compressor")
+    }
+
+    return b.String(), nil
 }

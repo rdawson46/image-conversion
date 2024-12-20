@@ -1,37 +1,49 @@
 package conversion_test
 
 import (
-	"bytes"
-	"image"
+    "bytes"
+    "image"
     "image/color"
-	"fmt"
-	"os"
-	"testing"
+    "fmt"
+    "os"
+    "testing"
+    "path/filepath"
 
-	"github.com/rdawson46/pic-conversion/internal/conversion"
+    "github.com/rdawson46/pic-conversion/internal/conversion"
 )
 
 // TODO: create tests
 func TestConvertImage(t *testing.T) {
-    b, err := os.ReadFile("./sample.png")
+    width := 500
+
+    entries, err := os.ReadDir("./images")
 
     if err != nil {
         t.Error(err)
     }
 
-    img, _, err := image.Decode(bytes.NewReader(b))
+    for _, file := range entries {
+        if !file.IsDir() {
+            b, err := os.ReadFile(filepath.Join("./images", file.Name()))
+            if err != nil {
+                t.Error(err)
+            }
 
-    if err != nil {
-        t.Error(err)
+            img, _, err := image.Decode(bytes.NewReader(b))
+
+            if err != nil {
+                t.Error(err)
+            }
+
+            ansi := conversion.ConvertColorImage(img, width)
+
+            fmt.Println(ansi)
+        }
     }
-
-    ansi := conversion.ConvertColorImage(img, 100)
-
-    fmt.Println(ansi)
 }
 
 func TestResizeImage(t *testing.T) {
-    b, err := os.ReadFile("./sample.png")
+    b, err := os.ReadFile("./images/sample.png")
 
     if err != nil {
         t.Error(err)
