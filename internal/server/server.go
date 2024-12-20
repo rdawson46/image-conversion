@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"net/http"
@@ -14,6 +15,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
+
+var width int = 150
 
 type ServerType int
 
@@ -115,26 +118,52 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // HACK: hard coding 100 temp
-    ansiArt, cached, err := s.db.GetImage(img, 150)
+    hashId := storage.CalculateImageHash(img)
+
+
+    var compressedAnsi string
+    var cached bool
+    compressedAnsi, err = s.db.CheckForImage(hashId)
+
 
     if err != nil {
-        http.Error(w, "Error converting image to ansi", http.StatusInternalServerError)
-        return
+        // image not stored
+        if errors.Is(err, storage.NotStoredError){
+            // produce
+            cached = false
+            ansiArt := conversion.ConvertColorImage(img, width)
+            s.logger.Info("Image made:", zap.Int("len(ansiArt)", len(ansiArt)))
+
+            // compress
+            compressedAnsi, err = conversion.Compress(ansiArt)
+
+            // compression error check
+            if err != nil {
+                http.Error(w, "Error compressing image", http.StatusInternalServerError)
+                return
+            }
+
+        } else {
+            // other error, write out and return
+            http.Error(w, "Error converting image to ansi", http.StatusInternalServerError)
+            return
+        }
+    } else {
+        cached = true
     }
 
-    s.logger.Info("Image made:", zap.Int("len(ansiArt)", len(ansiArt)), zap.Bool("Cached", cached))
-
-    mess, err := conversion.Compress(ansiArt)
     w.Header().Set("Content-Type", "text/plain")
 
+    // store image
+    err = s.db.StoreImage(hashId, compressedAnsi)
+
     if err != nil {
-        fmt.Fprint(w, ansiArt)
-        return
+        s.logger.Warn("Image could not be stored")
     }
 
-    s.logger.Info("Image made:", zap.Int("len(mess)", len(mess)))
-    fmt.Fprint(w, mess)
+    // change
+    s.logger.Info("Image made:", zap.Int("len(compressedAnsi)", len(compressedAnsi)), zap.Bool("cached", cached))
+    fmt.Fprint(w, compressedAnsi)
 }
 
 func (s *Server) Start() error {

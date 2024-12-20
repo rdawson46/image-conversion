@@ -1,10 +1,5 @@
 package storage
 
-import (
-    "github.com/rdawson46/pic-conversion/internal/conversion"
-	"image"
-)
-
 type SampleDB struct {
     db map[string]string
 }
@@ -15,23 +10,14 @@ func NewSampleDB() *SampleDB {
     }
 }
 
-// error handling not really needed for sample
-func (s *SampleDB) GetImage(img image.Image, width int) (string, bool, error) {
-    // create hash
-    hash := calculateImageHash(img)
-
-    // check in db
-    value, ok := s.db[hash]
-
-    if ok {
-        return value, ok, nil
+func (s *SampleDB) CheckForImage(hashId string) (string, error) {
+    if value, ok := s.db[hashId]; ok {
+        return value, nil
     }
+    return "", NotStoredError
+}
 
-    // else create everything
-    ansi := conversion.ConvertColorImage(img, width)
-
-    // and store
-    s.db[hash] = ansi
-
-    return ansi, ok, nil
+func (s *SampleDB) StoreImage(hashId, ansi string) error {
+    s.db[hashId] = ansi
+    return nil
 }

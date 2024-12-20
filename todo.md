@@ -1,7 +1,6 @@
 # To Do
 * conversion process/algorithm
-    * improve scaling
-* compresssion algorithm
+    * improve scaling?
 * makefile
     * test start up
     * server start up
