@@ -77,7 +77,7 @@ func ResizeImage(img image.Image, width int) image.Image {
     return resized
 }
 
-func oldConvertImage(img image.Image, width int) string {
+func OldConvertImage(img image.Image, width int) string {
     var ans string
 
     resizedImage := ResizeImage(img, width)

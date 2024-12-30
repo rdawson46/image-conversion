@@ -98,14 +98,18 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    r.Body = http.MaxBytesReader(w, r.Body, s.config.MaxUploadSize)
+    // r.Body = http.MaxBytesReader(w, r.Body, s.config.MaxUploadSize)
+    /*
     if err := r.ParseMultipartForm(s.config.MaxUploadSize); err != nil {
+        s.logger.Info("File too large")
         http.Error(w, "File too large", http.StatusBadRequest)
         return
     }
+    */
 
     file, _, err := r.FormFile("image")
     if err != nil {
+        s.logger.Info("Error retrieving file")
         http.Error(w, "Error retrieving file", http.StatusBadRequest)
         return
     }
@@ -131,17 +135,21 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
         if errors.Is(err, storage.NotStoredError){
             // produce
             cached = false
-            ansiArt := conversion.ConvertColorImage(img, width)
+            //ansiArt := conversion.ConvertColorImage(img, width)
+            ansiArt := conversion.OldConvertImage(img, width)
             s.logger.Info("Image made:", zap.Int("len(ansiArt)", len(ansiArt)))
 
             // compress
-            compressedAnsi, err = conversion.Compress(ansiArt)
+            // compressedAnsi, err = conversion.Compress(ansiArt)
+            compressedAnsi = ansiArt
 
             // compression error check
+            /*
             if err != nil {
                 http.Error(w, "Error compressing image", http.StatusInternalServerError)
                 return
             }
+            */
 
         } else {
             // other error, write out and return
@@ -162,9 +170,10 @@ func (s *Server) uploadHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     // change
-    s.logger.Info("Image made:", zap.Int("len(compressedAnsi)", len(compressedAnsi)), zap.Bool("cached", cached))
+    s.logger.Info("Image sent:", zap.Int("len(compressedAnsi)", len(compressedAnsi)), zap.Bool("cached", cached))
     fmt.Fprint(w, compressedAnsi)
 }
+
 
 func (s *Server) Start() error {
     mux := http.NewServeMux()

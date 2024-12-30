@@ -1,16 +1,22 @@
 # To Do
-* conversion process/algorithm
-    * improve scaling?
+* server
+    * enable compression
+    * enable color
+* UI
+    * structure
+    * fetch request
+    * un-zip and display
+* server issues
+    * upload size limit
 * makefile
     * test start up
     * server start up
 * assign addr
     * modify test script
 * database
-    * mongo setup
-        * TTL caching with hash
     * connection for server
-* UI
+    * mongo or redis setup
+        * TTL caching with hash
 * routing
     * error handling and logging
 * hosting

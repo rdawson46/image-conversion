@@ -10,7 +10,7 @@ import (
 )
 
 func run() error {
-    config := server.NewConfig(8000, 10, 10, 30, 10, server.Test)
+    config := server.NewConfig(8000, 2000, 10, 30, 10, server.Test)
 
     s := server.NewServer(config)
 
