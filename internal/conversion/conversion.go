@@ -6,28 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
 	"math"
 	"strings"
 )
 
-type AnsiColor struct {
-    code int
-    r, g, b uint8
-}
-
-var ansiColors = []AnsiColor{
-    {30, 0, 0, 0}, // black
-    {31, 170, 0, 0}, // red
-    {32, 0, 170, 0}, // green
-    {33, 170, 85, 0}, // yellow
-    {34, 0, 0, 170}, // blue
-    {34, 170, 0, 170}, // magenta
-    {35, 0, 170, 170}, // cyan
-    {37, 170, 170, 170}, // white
-}
 
 var asciiChars = []rune{
     ' ',
@@ -43,10 +27,14 @@ var asciiChars = []rune{
     '@',
 }
 
-func ColorToGrayscale(c color.Color) float64 {
-    r, g, b, _ := c.RGBA()
-    return (0.299 * float64(r) + 0.587 * float64(g) + 0.114 * float64(b)) / 65535.0
+/*
+var asciiChars = []rune {
+    'I', 'l', 'i', 'j', 't', 'r', 'f',
+    'c', 'v','u','n','x','z','J','L',
+    'C','Y','U','O','Q','D','P','X',
+    'M','W','H','K','B','R','N',
 }
+*/
 
 func MapToAscii(grayValue float64) rune {
     i := int(math.Floor(grayValue * float64(len(asciiChars)-1)))
@@ -103,32 +91,6 @@ func OldConvertImage(img image.Image, width int) string {
     return ans
 }
 
-// functions for color
-
-func colorDistance(r1, g1, b1, r2, g2, b2 uint8) float64 {
-    rDiff := float64(r1) - float64(r2)
-    gDiff := float64(g1) - float64(g2)
-    bDiff := float64(b1) - float64(b2)
-
-    return math.Sqrt(rDiff*rDiff + gDiff*gDiff + bDiff*bDiff)
-}
-
-func closestAnsiColor(r, g, b uint8) AnsiColor {
-    var closestColor AnsiColor
-    minDist := math.MaxFloat64
-
-    for _, ac := range ansiColors {
-        dist := colorDistance(r, g, b, ac.r, ac.g, ac.b)
-
-        if dist < minDist {
-            minDist = dist
-            closestColor = ac
-        }
-    }
-    return closestColor
-}
-
-
 func ConvertColorImage(img image.Image, width int) string {
     var ans string
 
@@ -159,6 +121,49 @@ func ConvertColorImage(img image.Image, width int) string {
             } else {
                 asciiArt = string(asciiChar)
             }
+
+            l += string(asciiArt)
+       }
+
+        if len(strings.TrimSpace(l)) != 0 {
+            ans += l + "\033[0m\n"
+        }
+    }
+
+    return ans
+}
+
+func Convert256ColorImage(img image.Image, width int) string {
+    var ans string
+
+    resizedImage := ResizeImage(img, width)
+    bounds := resizedImage.Bounds()
+    height := bounds.Max.Y
+    width = bounds.Max.X
+
+    for y := 0; y < height; y++ {
+        l := ""
+
+        for x := 0; x < width; x++ {
+            pixelColor := resizedImage.At(x, y)
+            r, g, b, _ := pixelColor.RGBA()
+
+            r8 := uint8(r >> 8)
+            g8 := uint8(g >> 8)
+            b8 := uint8(b >> 8)
+
+            colorCode := findClosest256Color(r8, g8, b8)
+
+            grayValue := ColorToGrayscale(pixelColor)
+            asciiChar := MapToAscii(grayValue)
+
+            var asciiArt string
+            if asciiChar != ' '{
+                asciiArt = fmt.Sprintf("\033[38;5;%dm%c", colorCode, asciiChar)
+            } else {
+                asciiArt = string(asciiChar)
+            }
+            asciiArt += "\033[0m"
 
             l += string(asciiArt)
        }

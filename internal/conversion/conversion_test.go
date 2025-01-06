@@ -14,7 +14,7 @@ import (
 
 // TODO: create tests
 func TestConvertImage(t *testing.T) {
-    width := 500
+    width := 550
 
     entries, err := os.ReadDir("./images")
 
@@ -35,8 +35,7 @@ func TestConvertImage(t *testing.T) {
                 t.Error(err)
             }
 
-            ansi := conversion.ConvertColorImage(img, width)
-
+            ansi := conversion.Convert256ColorImage(img, width)
             fmt.Println(ansi)
         }
     }
