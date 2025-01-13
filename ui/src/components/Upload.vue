@@ -1,11 +1,6 @@
 <script setup>
     import {ref} from 'vue';
 
-    function makeParagraph(line) {
-
-    }
-
-
     function uploadFile() {
         const imagePreview = document.getElementById('imagePreview');
         const imageResult = document.getElementById('imageResult');
@@ -33,12 +28,17 @@
                     return response.text()
                 })
                 .then(text => {
-                    /*
-                    need to split text on new line and create paragraph per line
-                    */
-                    const lines = text.split('\n')
+                    let ans = ""
+                    text.split('').forEach(c => {
+                        if (c == ' ') {
+                            ans += "&nbsp"
+                        } else if (c == '\n') {
+                            ans += "<br>"
+                        }
 
-                    imageResult.textContent = text
+                        ans += c
+                    });
+                    imageResult.innerHTML += `<p style="white-space:no-wrap;text-align: left;">${ans}</p>`
                 })
                 /*
                 .then(blob => {
@@ -81,5 +81,10 @@
 img {
     padding: 16px;
     width: 30rem;
+}
+
+#imageResult {
+    padding: 0;
+    margin: 0;
 }
 </style>

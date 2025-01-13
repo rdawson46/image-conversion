@@ -1,6 +1,7 @@
 package main
 
 import (
+    "flag"
 	"log"
 	"os"
 	"os/signal"
@@ -10,7 +11,14 @@ import (
 )
 
 func run() error {
-    config := server.NewConfig(8000, 2000, 10, 30, 10, server.Test)
+    modePtr := flag.String("mode", "test", "mode")
+
+    var config server.ServerConfig
+    if *modePtr == "prod" {
+        config = server.NewConfig(8000, 2000, 10, 30, 10, server.Prod)
+    } else {
+        config = server.NewConfig(8000, 2000, 10, 30, 10, server.Test)
+    }
 
     s := server.NewServer(config)
 
