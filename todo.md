@@ -1,11 +1,11 @@
 # To Do
 * server
-    * enable compression
     * enable color
+        * need to create a better way to render for html
+    * enable compression
 * UI
-    * structure
-    * fetch request
-    * un-zip and display
+    * structure for displaying image
+        * un-zip when compression is activated
 * server issues
     * upload size limit
 * makefile
@@ -16,10 +16,12 @@
 * database
     * connection for server
     * mongo or redis setup
-        * TTL caching with hash
+        * render has free redis set up
+        * TTL caching with image hash
 * routing
     * error handling and logging
 * hosting
+
 
 # Done
 * conversion process/algorithm
